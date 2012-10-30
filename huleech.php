@@ -85,7 +85,10 @@
 		
 		$xml = new SimpleXMLElement($source);
 		$EID = str_replace("http://www.hulu.com/embed/","",$xml->embed_url);
-		
+
+		preg_match('#embed.html\?eid=(.*)#', trim($EID), $EID); 
+		$EID = $EID[1];
+
 		$source = file_get_contents("http://r.hulu.com/videos?eid=".$EID);
 		$xml = new SimpleXMLElement($source);
 		$PID = str_replace("NO_MORE_RELEASES_PLEASE_","",$xml->video->pid);
@@ -210,16 +213,18 @@
 		$hulu = getHuluStream($url,$choice);
 		if($choice == "false"){
 			echo $hulu;
-		}else{		    
-			$command = "rtmpdump -r '".$hulu['server']."' -a '".$hulu['appName']."' -W '".$hulu['swfUrl']."' -p '".$hulu['contentUrl']."' -y '".$hulu['stream']."'";
+		}else{
+			$command = "rtmpdump -r '{$hulu['server']}' -a '{$hulu['appName']}' -W '{$hulu['swfUrl']}' -p '{$hulu['contentUrl']}' -y '{$hulu['stream']}' -o '{$hulu['title']}.flv'";
+			//$command = "rtmpdump -r '".$hulu['server']."' -a '".$hulu['appName']."' -W '".$hulu['swfUrl']."' -p '".$hulu['contentUrl']."' -y '".$hulu['stream']."'";
 			if($choice == "data"){ die(print_r($hulu)); }
 			if($choice == "command"){ die($command); }
+			// FIXME
 			header("Content-Description: File Transfer");
 			header("Accept-Ranges: bytes");
 		    header('Content-Type: video/x-flv');
-		    header("Content-Disposition: attachment; filename= " . $hulu['title'].".flv");
+		    header("Content-Disposition: attachment; filename= \"{$hulu['title']}.flv\"");
 		    header("Content-Transfer-Encoding: binary");
-			echo passthru($command);
+			echo passthru($command); // FIXME
 		}
 	}
 	
